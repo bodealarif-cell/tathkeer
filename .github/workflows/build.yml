@@ -29,9 +29,19 @@ jobs:
       run: |
         mkdir -p gradle/wrapper
         curl -L -o gradle/wrapper/gradle-wrapper.jar https://github.com/gradle/gradle/raw/v8.6.0/gradle/wrapper/gradle-wrapper.jar
+        if [ ! -f gradle/wrapper/gradle-wrapper.properties ]; then
+          echo "distributionBase=GRADLE_USER_HOME" > gradle/wrapper/gradle-wrapper.properties
+          echo "distributionPath=wrapper/dists" >> gradle/wrapper/gradle-wrapper.properties
+          echo "distributionUrl=https\\://services.gradle.org/distributions/gradle-8.6-bin.zip" >> gradle/wrapper/gradle-wrapper.properties
+          echo "zipStoreBase=GRADLE_USER_HOME" >> gradle/wrapper/gradle-wrapper.properties
+          echo "zipStorePath=wrapper/dists" >> gradle/wrapper/gradle-wrapper.properties
+        fi
 
     - name: Build with Gradle
       run: bash ./gradlew assembleRelease
+
+    - name: List output files (to find APK)
+      run: ls -R app/build/outputs/
 
     - name: Upload APK
       uses: actions/upload-artifact@v4
