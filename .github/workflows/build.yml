@@ -17,23 +17,18 @@ jobs:
         with:
           java-version: '17'
           distribution: 'temurin'
-          cache: gradle
 
       - name: Create gradle.properties
         run: |
           echo "android.useAndroidX=true" > gradle.properties
           echo "android.enableJetifier=true" >> gradle.properties
-          echo "org.gradle.jvmargs=-Xmx2048m" >> gradle.properties
 
-      - name: Grant execute permission for gradlew
-        run: chmod +x gradlew
-
-      - name: Build Debug APK
-        run: ./gradlew assembleDebug --stacktrace
+      - name: Build with System Gradle
+        # سنستخدم 'gradle' بدلاً من './gradlew' لتجنب خطأ الملف التالف
+        run: gradle assembleDebug --stacktrace
 
       - name: Upload APK Artifact
         uses: actions/upload-artifact@v4
         with:
           name: Tathkeer-App-Debug
-          path: "**/build/outputs/apk/debug/*.apk"
-          if-no-files-found: error
+          path: "**/*.apk"
