@@ -36,13 +36,9 @@ jobs:
       run: |
         mkdir -p gradle/wrapper
         if [ ! -f gradle/wrapper/gradle-wrapper.jar ]; then
-          echo "Downloading gradle-wrapper.jar..."
           curl -L -o gradle/wrapper/gradle-wrapper.jar https://github.com/gradle/gradle/raw/v8.6.0/gradle/wrapper/gradle-wrapper.jar
-        else
-          echo "gradle-wrapper.jar already exists"
         fi
         if [ ! -f gradle/wrapper/gradle-wrapper.properties ]; then
-          echo "Creating gradle-wrapper.properties..."
           echo "distributionBase=GRADLE_USER_HOME" > gradle/wrapper/gradle-wrapper.properties
           echo "distributionPath=wrapper/dists" >> gradle/wrapper/gradle-wrapper.properties
           echo "distributionUrl=https\\://services.gradle.org/distributions/gradle-8.6-bin.zip" >> gradle/wrapper/gradle-wrapper.properties
@@ -53,31 +49,23 @@ jobs:
     - name: List available projects
       run: bash ./gradlew projects
 
-    - name: List available tasks
-      run: bash ./gradlew tasks
+    - name: List available tasks (for app module)
+      run: bash ./gradlew :app:tasks || echo "Module :app not found"
 
-    - name: Build with Gradle (using bash)
+    - name: Build with Gradle
       run: bash ./gradlew :app:assembleRelease
 
-    - name: Search for APK files
-      id: find_apk
+    - name: List build outputs
+      if: always()
       run: |
-        echo "Searching for APK files in the entire project..."
-        apk_paths=$(find . -name "*.apk" -type f)
-        if [ -n "$apk_paths" ]; then
-          echo "Found APK(s):"
-          echo "$apk_paths"
-          # Save first APK path to environment variable
-          first_apk=$(echo "$apk_paths" | head -n1)
-          echo "APK_PATH=$first_apk" >> $GITHUB_ENV
-        else
-          echo "No APK files found."
-          exit 1
-        fi
+        echo "=== app/build directory ==="
+        ls -R app/build/ || echo "app/build not found"
+        echo "=== Searching for any APK ==="
+        find . -name "*.apk" 2>/dev/null || echo "No APK found"
 
-    - name: Upload APK
+    - name: Upload APK (if found)
       if: success()
       uses: actions/upload-artifact@v4
       with:
         name: app-release
-        path: ${{ env.APK_PATH }}
+        path: app/build/outputs/apk/release/app-release.apk
