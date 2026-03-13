@@ -20,37 +20,11 @@ jobs:
         java-version: '17'
         distribution: 'temurin'
 
-    - name: Recreate settings.gradle (ensure correct format)
-      run: |
-        cat > settings.gradle << 'EOF'
-        pluginManagement {
-            repositories {
-                google()
-                mavenCentral()
-                gradlePluginPortal()
-            }
-        }
-        dependencyResolutionManagement {
-            repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
-            repositories {
-                google()
-                mavenCentral()
-            }
-        }
-        rootProject.name = "Tathkeer"
-        include ':app'
-        EOF
-
-    - name: Fix gradlew line endings and permissions
-      run: |
-        sed -i 's/\r$//' gradlew
-        chmod +x gradlew
-
     - name: Setup Gradle
-      uses: gradle/gradle-build-action@v3
+      uses: gradle/actions/setup-gradle@v3
 
     - name: Build with Gradle
-      run: ./gradlew :app:assembleRelease
+      run: gradle :app:assembleRelease
 
     - name: Upload APK
       uses: actions/upload-artifact@v4
