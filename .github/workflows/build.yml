@@ -26,14 +26,14 @@ jobs:
         cat settings.gradle || echo "settings.gradle not found"
         echo "=== app/build.gradle content ==="
         cat app/build.gradle || echo "app/build.gradle not found"
-        echo "=== Available projects ==="
-        ./gradlew projects || echo "Gradle projects failed"
 
-    - name: Grant execute permission for gradlew
-      run: chmod +x gradlew
+    - name: Fix gradlew line endings and permissions
+      run: |
+        sed -i 's/\r$//' gradlew
+        chmod +x gradlew
 
-    - name: Build with Gradle
-      run: ./gradlew :app:assembleRelease
+    - name: Build with Gradle (using bash)
+      run: bash ./gradlew :app:assembleRelease
 
     - name: Upload APK
       uses: actions/upload-artifact@v4
