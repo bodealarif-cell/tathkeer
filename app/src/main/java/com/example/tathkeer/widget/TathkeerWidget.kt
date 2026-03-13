@@ -21,7 +21,6 @@ import androidx.glance.text.FontWeight
 import androidx.glance.text.Text
 import androidx.glance.text.TextStyle
 import androidx.glance.unit.ColorProvider
-import androidx.glance.unit.dp
 import com.example.tathkeer.MainActivity
 import com.example.tathkeer.R
 import com.example.tathkeer.data.AdhkarProvider
@@ -40,12 +39,12 @@ class TathkeerWidget : GlanceAppWidget() {
 
     @Composable
     private fun MyContent(context: Context) {
-        // نقرأ الحالة المحفوظة
+        // قراءة الحالة المحفوظة
         val prefs = Preferences(context)
-        val section = runBlocking { prefs.sectionFlow.replayLatest() ?: "morning" }
-        val index = runBlocking { prefs.indexFlow.replayLatest() ?: 0 }
-        val morningDone = runBlocking { prefs.morningDoneFlow().replayLatest() }
-        val eveningDone = runBlocking { prefs.eveningDoneFlow().replayLatest() }
+        val section = runBlocking { prefs.sectionFlow.first() } // بدلاً من replayLatest
+        val index = runBlocking { prefs.indexFlow.first() }
+        val morningDone = runBlocking { prefs.morningDoneFlow().first() }
+        val eveningDone = runBlocking { prefs.eveningDoneFlow().first() }
 
         val list = if (section == "morning") AdhkarProvider.morningAdhkar else AdhkarProvider.eveningAdhkar
         val doneList = if (section == "morning") morningDone else eveningDone
@@ -81,7 +80,7 @@ class TathkeerWidget : GlanceAppWidget() {
                     text = currentZikr.text.take(30) + "...",  // نختصر النص
                     style = TextStyle(
                         color = textColor,
-                        fontSize = 12.sp
+                        fontSize = 12
                     ),
                     modifier = GlanceModifier.padding(bottom = 8.dp)
                 )
@@ -115,11 +114,4 @@ class TathkeerWidget : GlanceAppWidget() {
 
 class TathkeerWidgetReceiver : GlanceAppWidgetReceiver() {
     override val glanceAppWidget: GlanceAppWidget = TathkeerWidget()
-}
-
-// دالة مساعدة لاستخراج آخر قيمة من Flow (بما أننا في Glance لا يمكننا استخدام collect)
-private suspend fun <T> Flow<T>.replayLatest(): T? {
-    var value: T? = null
-    collect { value = it }
-    return value
 }
