@@ -5,6 +5,7 @@ on:
     branches: [ main ]
   pull_request:
     branches: [ main ]
+  workflow_dispatch: # يتيح لك تشغيل البناء يدوياً
 
 jobs:
   build:
@@ -19,22 +20,23 @@ jobs:
       with:
         java-version: '17'
         distribution: 'temurin'
+        cache: gradle
 
-    - name: Create gradle.properties (fix AndroidX)
+    - name: Create gradle.properties
       run: |
         echo "android.useAndroidX=true" > gradle.properties
-        echo "org.gradle.jvmargs=-Xmx2048m -Dfile.encoding=UTF-8" >> gradle.properties
-        echo "android.nonTransitiveRClass=true" >> gradle.properties
-        cat gradle.properties
+        echo "android.enableJetifier=true" >> gradle.properties
+        echo "org.gradle.jvmargs=-Xmx2048m" >> gradle.properties
 
-    - name: Setup Gradle
-      uses: gradle/actions/setup-gradle@v3
+    - name: Grant execute permission for gradlew
+      run: chmod +x gradlew
 
-    - name: Build with Gradle
-      run: gradle :app:assembleRelease
+    - name: Build Debug APK
+      run: ./gradlew assembleDebug --stacktrace
 
-    - name: Upload APK
+    - name: Upload APK Artifact
       uses: actions/upload-artifact@v4
       with:
-        name: app-release
-        path: app/build/outputs/apk/release/app-release.apk
+        name: Tathkeer-App-Debug
+        path: "**/build/outputs/apk/debug/*.apk"
+        if-no-files-found: error # سيخبرك فوراً إذا لم يجد الملف
