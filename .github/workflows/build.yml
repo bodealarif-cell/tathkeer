@@ -20,51 +20,16 @@ jobs:
         java-version: '17'
         distribution: 'temurin'
 
-    - name: Check project structure
-      run: |
-        echo "=== settings.gradle content ==="
-        cat settings.gradle || echo "settings.gradle not found"
-        echo "=== app/build.gradle content ==="
-        cat app/build.gradle || echo "app/build.gradle not found"
+    - name: Grant execute permission for gradlew
+      run: chmod +x gradlew
 
-    - name: Fix gradlew line endings and permissions
-      run: |
-        sed -i 's/\r$//' gradlew
-        chmod +x gradlew
-
-    - name: Ensure gradle wrapper jar exists
-      run: |
-        mkdir -p gradle/wrapper
-        if [ ! -f gradle/wrapper/gradle-wrapper.jar ]; then
-          curl -L -o gradle/wrapper/gradle-wrapper.jar https://github.com/gradle/gradle/raw/v8.6.0/gradle/wrapper/gradle-wrapper.jar
-        fi
-        if [ ! -f gradle/wrapper/gradle-wrapper.properties ]; then
-          echo "distributionBase=GRADLE_USER_HOME" > gradle/wrapper/gradle-wrapper.properties
-          echo "distributionPath=wrapper/dists" >> gradle/wrapper/gradle-wrapper.properties
-          echo "distributionUrl=https\\://services.gradle.org/distributions/gradle-8.6-bin.zip" >> gradle/wrapper/gradle-wrapper.properties
-          echo "zipStoreBase=GRADLE_USER_HOME" >> gradle/wrapper/gradle-wrapper.properties
-          echo "zipStorePath=wrapper/dists" >> gradle/wrapper/gradle-wrapper.properties
-        fi
-
-    - name: List available projects
-      run: bash ./gradlew projects
-
-    - name: List available tasks (for app module)
-      run: bash ./gradlew :app:tasks || echo "Module :app not found"
+    - name: Setup Gradle
+      uses: gradle/gradle-build-action@v3
 
     - name: Build with Gradle
-      run: bash ./gradlew :app:assembleRelease
+      run: ./gradlew :app:assembleRelease
 
-    - name: List build outputs
-      if: always()
-      run: |
-        echo "=== app/build directory ==="
-        ls -R app/build/ || echo "app/build not found"
-        echo "=== Searching for any APK ==="
-        find . -name "*.apk" 2>/dev/null || echo "No APK found"
-
-    - name: Upload APK (if found)
-      if: success()
+    - name: Upload APK
       uses: actions/upload-artifact@v4
       with:
         name: app-release
