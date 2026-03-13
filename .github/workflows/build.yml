@@ -42,7 +42,17 @@ jobs:
 
     - name: List output files (to find APK)
       run: ls -R app/build/outputs/
-
+    - name: Check build status and list files
+      if: always()   # تعمل حتى لو فشلت الخطوة السابقة
+      run: |
+        echo "Current directory:"
+        pwd
+        echo "Contents of app folder:"
+        ls -la app/
+        echo "Contents of app/build folder (if exists):"
+        ls -la app/build/ || echo "app/build not found"
+        echo "Checking if assembleRelease produced any output..."
+        find app -name "*.apk" 2>/dev/null || echo "No APK found"
     - name: Upload APK
       uses: actions/upload-artifact@v4
       with:
