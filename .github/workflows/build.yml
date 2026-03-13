@@ -20,27 +20,37 @@ jobs:
         java-version: '17'
         distribution: 'temurin'
 
+    - name: Recreate settings.gradle (ensure correct format)
+      run: |
+        cat > settings.gradle << 'EOF'
+        pluginManagement {
+            repositories {
+                google()
+                mavenCentral()
+                gradlePluginPortal()
+            }
+        }
+        dependencyResolutionManagement {
+            repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
+            repositories {
+                google()
+                mavenCentral()
+            }
+        }
+        rootProject.name = "Tathkeer"
+        include ':app'
+        EOF
+
     - name: Fix gradlew line endings and permissions
       run: |
         sed -i 's/\r$//' gradlew
         chmod +x gradlew
 
-    - name: Ensure gradle wrapper jar exists
-      run: |
-        mkdir -p gradle/wrapper
-        if [ ! -f gradle/wrapper/gradle-wrapper.jar ]; then
-          curl -L -o gradle/wrapper/gradle-wrapper.jar https://github.com/gradle/gradle/raw/v8.6.0/gradle/wrapper/gradle-wrapper.jar
-        fi
-        if [ ! -f gradle/wrapper/gradle-wrapper.properties ]; then
-          echo "distributionBase=GRADLE_USER_HOME" > gradle/wrapper/gradle-wrapper.properties
-          echo "distributionPath=wrapper/dists" >> gradle/wrapper/gradle-wrapper.properties
-          echo "distributionUrl=https\\://services.gradle.org/distributions/gradle-8.6-bin.zip" >> gradle/wrapper/gradle-wrapper.properties
-          echo "zipStoreBase=GRADLE_USER_HOME" >> gradle/wrapper/gradle-wrapper.properties
-          echo "zipStorePath=wrapper/dists" >> gradle/wrapper/gradle-wrapper.properties
-        fi
+    - name: Setup Gradle
+      uses: gradle/gradle-build-action@v3
 
-    - name: Build with Gradle (using bash)
-      run: bash ./gradlew :app:assembleRelease
+    - name: Build with Gradle
+      run: ./gradlew :app:assembleRelease
 
     - name: Upload APK
       uses: actions/upload-artifact@v4
