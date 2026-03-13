@@ -20,13 +20,6 @@ jobs:
         java-version: '17'
         distribution: 'temurin'
 
-    - name: Check project structure
-      run: |
-        echo "=== settings.gradle ==="
-        cat settings.gradle
-        echo "=== app/build.gradle ==="
-        cat app/build.gradle || echo "app/build.gradle not found"
-
     - name: Fix gradlew line endings and permissions
       run: |
         sed -i 's/\r$//' gradlew
@@ -36,7 +29,6 @@ jobs:
       run: |
         mkdir -p gradle/wrapper
         if [ ! -f gradle/wrapper/gradle-wrapper.jar ]; then
-          echo "Downloading gradle-wrapper.jar..."
           curl -L -o gradle/wrapper/gradle-wrapper.jar https://github.com/gradle/gradle/raw/v8.6.0/gradle/wrapper/gradle-wrapper.jar
         fi
         if [ ! -f gradle/wrapper/gradle-wrapper.properties ]; then
@@ -50,20 +42,8 @@ jobs:
     - name: Build with Gradle (using bash)
       run: bash ./gradlew :app:assembleRelease
 
-    - name: List build outputs
-      if: always()
-      run: |
-        echo "=== app/build directory ==="
-        ls -R app/build/ || echo "app/build not found"
-        echo "=== Searching for APK ==="
-        find . -name "*.apk" -type f || echo "No APK found"
-
-    - name: Upload APK (dynamic path)
-      if: success()
+    - name: Upload APK
       uses: actions/upload-artifact@v4
       with:
         name: app-release
-        path: |
-          app/build/outputs/apk/release/app-release.apk
-          app/build/outputs/apk/debug/app-debug.apk
-          **/*.apk
+        path: app/build/outputs/apk/release/app-release.apk
