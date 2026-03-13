@@ -20,8 +20,17 @@ jobs:
         java-version: '17'
         distribution: 'temurin'
 
-    - name: Setup Gradle
-      uses: gradle/gradle-build-action@v3
+    - name: Check project structure
+      run: |
+        echo "=== settings.gradle content ==="
+        cat settings.gradle || echo "settings.gradle not found"
+        echo "=== app/build.gradle content ==="
+        cat app/build.gradle || echo "app/build.gradle not found"
+        echo "=== Available projects ==="
+        ./gradlew projects || echo "Gradle projects failed"
+
+    - name: Grant execute permission for gradlew
+      run: chmod +x gradlew
 
     - name: Build with Gradle
       run: ./gradlew :app:assembleRelease
