@@ -25,7 +25,12 @@ jobs:
         sed -i 's/\r$//' gradlew
         chmod +x gradlew
 
-    - name: Build with Gradle (using bash)
+    - name: Setup Gradle wrapper
+      run: |
+        mkdir -p gradle/wrapper
+        curl -L -o gradle/wrapper/gradle-wrapper.jar https://github.com/gradle/gradle/raw/v8.6.0/gradle/wrapper/gradle-wrapper.jar
+
+    - name: Build with Gradle
       run: bash ./gradlew assembleRelease
 
     - name: Upload APK
