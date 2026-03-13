@@ -41,7 +41,6 @@ jobs:
         else
           echo "gradle-wrapper.jar already exists"
         fi
-        # تأكد من وجود ملف properties
         if [ ! -f gradle/wrapper/gradle-wrapper.properties ]; then
           echo "Creating gradle-wrapper.properties..."
           echo "distributionBase=GRADLE_USER_HOME" > gradle/wrapper/gradle-wrapper.properties
@@ -51,11 +50,34 @@ jobs:
           echo "zipStorePath=wrapper/dists" >> gradle/wrapper/gradle-wrapper.properties
         fi
 
+    - name: List available projects
+      run: bash ./gradlew projects
+
+    - name: List available tasks
+      run: bash ./gradlew tasks
+
     - name: Build with Gradle (using bash)
       run: bash ./gradlew :app:assembleRelease
 
+    - name: Search for APK files
+      id: find_apk
+      run: |
+        echo "Searching for APK files in the entire project..."
+        apk_paths=$(find . -name "*.apk" -type f)
+        if [ -n "$apk_paths" ]; then
+          echo "Found APK(s):"
+          echo "$apk_paths"
+          # Save first APK path to environment variable
+          first_apk=$(echo "$apk_paths" | head -n1)
+          echo "APK_PATH=$first_apk" >> $GITHUB_ENV
+        else
+          echo "No APK files found."
+          exit 1
+        fi
+
     - name: Upload APK
+      if: success()
       uses: actions/upload-artifact@v4
       with:
         name: app-release
-        path: app/build/outputs/apk/release/app-release.apk
+        path: ${{ env.APK_PATH }}
